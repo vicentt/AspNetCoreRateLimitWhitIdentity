@@ -15,6 +15,13 @@ namespace Client.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly ApiClientService ApiClientService;
+
+        public HomeController(ApiClientService apiClientService)
+        {
+            ApiClientService = apiClientService;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -33,27 +40,16 @@ namespace Client.Controllers
 
         public async Task<IActionResult> CallApi()
         {
-            DiscoveryClient discoveryClient = new DiscoveryClient("http://localhost:5000/");
+            var response = await ApiClientService.CallApi();
+            ViewBag.Response = $"{(int)response.StatusCode} -- {response.StatusCode}";
+            return View("CallApi");
+        }
 
-            // Accept the configuration even if the issuer and endpoints don't match
-            discoveryClient.Policy.ValidateIssuerName = false;
-            discoveryClient.Policy.ValidateEndpoints = false;
-            var discoResponse = await discoveryClient.GetAsync();
-
-            var client = new HttpClient();
-            var response = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
-            {
-                Address = discoResponse.TokenEndpoint,
-                ClientId = "client",
-                ClientSecret = "secret",
-                Scope = "api1"
-            });
-
-            var clientHttp = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", response.AccessToken);
-            var content = await client.GetStringAsync("http://localhost:51031/api/values");
-
-            ViewBag.Json = JArray.Parse(content).ToString();
+        public async Task<IActionResult> CallApiUnAuthorized()
+        {
+            var HttpClient = new HttpClient();
+            var response = await HttpClient.GetAsync("http://localhost:51031/api/values");
+            ViewBag.Response = $"{(int)response.StatusCode} -- {response.StatusCode}";
             return View("CallApi");
         }
     }

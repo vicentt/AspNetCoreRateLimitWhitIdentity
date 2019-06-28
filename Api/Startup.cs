@@ -67,6 +67,8 @@ namespace Api
 
             // configuration (resolvers, counter key builders)
             services.AddSingleton<IRateLimitConfiguration, RateLimitConfigurationExtension>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Threading.Tasks;
+using Client.Controllers;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
 
 namespace Client
 {
@@ -26,6 +24,19 @@ namespace Client
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpClient<ApiClientService>(
+             client =>
+             {
+                 client.BaseAddress = new Uri("http://localhost:51031/");
+             })
+              .AddHttpMessageHandler(() => new AccessTokenDelegatingHandler(
+                  "http://localhost:5000/connect/token",
+                  "client",
+                  "secret",
+                  "api1"))
+              .SetHandlerLifetime(TimeSpan.FromMinutes(3));
+
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();

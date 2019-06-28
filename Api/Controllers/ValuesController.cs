@@ -16,7 +16,7 @@ namespace Api.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()
         {
-            return new string[] { "Método", "Autenticado" };
+            return Ok();
         }
 
         // GET api/values/5
