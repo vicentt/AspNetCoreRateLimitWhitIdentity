@@ -29,16 +29,18 @@ namespace Api.Middlewares
                    ? context.User.Claims.FirstOrDefault(c => c.Type == "client_id").Value
                    : "anonimo";
 
-            var totalLimit = int.Parse(context.User.Claims.FirstOrDefault(c => c.Type == "client_AspNetRateLimit24h") != null
+            if (await _clientPolicyStore.GetAsync($"{_options.ClientPolicyPrefix}_{clientId}") == null)
+            {
+                var totalLimit = int.Parse(context.User.Claims.FirstOrDefault(c => c.Type == "client_AspNetRateLimit24h") != null
                     ? context.User.Claims.FirstOrDefault(c => c.Type == "client_AspNetRateLimit24h").Value
                     : "5");
 
-            if (clientId != "anonimo")
-            {
-                var rule = new ClientRateLimitPolicy()
+                if (clientId != "anonimo")
                 {
-                    ClientId = clientId,
-                    Rules = new List<RateLimitRule>()
+                    var rule = new ClientRateLimitPolicy()
+                    {
+                        ClientId = clientId,
+                        Rules = new List<RateLimitRule>()
                     {
                         new RateLimitRule
                         {
@@ -47,8 +49,10 @@ namespace Api.Middlewares
                             Limit = totalLimit
                         }
                     }
-                };
-                await _clientPolicyStore.SetAsync($"{_options.ClientPolicyPrefix}_{rule.ClientId}", new ClientRateLimitPolicy { ClientId = rule.ClientId, Rules = rule.Rules }).ConfigureAwait(false);
+                    };
+
+                    await _clientPolicyStore.SetAsync($"{_options.ClientPolicyPrefix}_{rule.ClientId}", new ClientRateLimitPolicy { ClientId = rule.ClientId, Rules = rule.Rules }).ConfigureAwait(false);
+                }
             }
 
             await next(context);
